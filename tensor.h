@@ -3,7 +3,6 @@
 Tensor header, defining necessary structs to have a working tensor.
 A tensor is a multidimensional matrix holding elements of a single data type.
 
-520KB internal SRAM
 Author: oggyfoxy
 
 */
@@ -12,6 +11,7 @@ Author: oggyfoxy
 #define TENSOR_H
 
 #define MAX_DIMS 4
+
 
 // TODO: define datatype enum (placeholder)
 typedef enum {
@@ -31,6 +31,12 @@ typedef struct {
   int ndim;
 } tensor_t;
 
+
+// interface
+tensor_t* tensor_create(int ndim, int* shape, dtype_t dtype);
+void tensor_free(tensor_t* tensor); 
+tensor_t* tensor_add(tensor_t* a, tensor_t* b); // returns a new tensor 
+tensor_t* tensor_sub(tensor_t* a, tensor_t* b); // returns a new tensor
 
 
 #endif

@@ -1,10 +1,10 @@
 ```
 tensor library in c that abstracts memory on embedded devices.
 
-wip: ESP32
+will focus on android devices (arm64)
 
 TODO:
-- fixed memory pool (512kb)
+- dynamic memory pool 
 - tensor initialization
 - basic op
 ```
