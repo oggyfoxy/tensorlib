@@ -1,0 +1,7 @@
+echo "
+# Compiled binaries
+tensor
+*.o
+*.out
+*.exe
+" >> .gitignore
