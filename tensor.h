@@ -22,7 +22,7 @@ typedef enum {
 
 
 typedef struct {
-  int* shape; // gets the number of dimensions (dynamic)
+  size_t* shape; // gets the number of dimensions (dynamic)
   void* data; // to not get stuck constrained in one type
   // dtype_t dtype; // what type is our tensor: float64, float32, bf16, int8, uint8 etc. not really important as of now
   int* stride; // how many memory jumps to go to the next element in that dimension. stride(0) = row. stride(1) = column
@@ -32,12 +32,14 @@ typedef struct {
 
 
 // interface
-tensor_t* tensor_create(int ndim, int* shape);
+tensor_t* tensor_create(int ndim, size_t* shape);
 void free_tensor(tensor_t* t);
 void print_tensor(tensor_t* t);
 void fill_tensor(tensor_t* t);
 
 // access ops
+void* tensor_get(tensor_t*, size_t* indices);
+void tensor_set(tensor_t*, size_t* indices, void value);
 
 // basic ops
 tensor_t* tensor_add(tensor_t* a, tensor_t* b); // returns a new tensor 

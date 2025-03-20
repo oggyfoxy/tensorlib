@@ -4,12 +4,12 @@
 #include "tensor.h"
 
 // allocates a tensor struct in memory
-tensor_t* create_tensor(int ndim, int* shape) {
+tensor_t* create_tensor(int ndim, size_t* shape) {
   tensor_t* t = (tensor_t*)malloc(sizeof(tensor_t)); // allocate memory for a tensor on the heap
   t->ndim = ndim;
   
   // allocate shape array
-  t->shape = (int*)malloc(ndim * sizeof(int));
+  t->shape = (size_t*)malloc(ndim * sizeof(size_t));
   
   // check if shape allocation failed
   if (!t->shape) {
@@ -70,8 +70,6 @@ void tensor_print(tensor_t* t) {
     printf("Tensor: NULL\n");
     return;
   }
-
-
   printf("Tensor(\n");
   printf("\tdata: ");
   for (int i = 0; i < t->total_size; i++)
@@ -80,26 +78,39 @@ void tensor_print(tensor_t* t) {
 }
 
 
+// fills tensor with data from 0 to max size
 void tensor_fill(tensor_t* t) {
+  float* float_data = (float*)t->data;
   for (int i = 0; i < t->total_size; i++) {
-    t->data[i] = ((float*)t->data)[i];
+    float_data[i] = (float)i;
   }
+}
+
+size_t* get_shape(tensor_t* t) {
+  return t->shape;
 
 }
+
+void* tensor_get(tensor_t*, size_t* indices);
+
+void tensor_set(tensor_t*, size_t* indices, void* value);
+
+
 
 int
 main (int argc, char* argv[]) {
   
-
-  int shape[] = {2, 3};
-  tensor_t* t = create_tensor(2, shape);
-  
+  size_t shape[] = {2,3,4};
+  tensor_t* t = create_tensor(3, shape);
 
   printf("Created tensor at %p\n", (void*)t);
   printf("Dimensions: %d\n", t->ndim);
   
-  printf("Shape: [%d, %d]\n", t->shape[0], t->shape[1]);
+  printf("Shape: [%zu, %zu]\n", t->shape[0], t->shape[1]);
   
+  size_t* shape_ptr = get_shape(t);
+  printf("%p\n", (void*)shape_ptr); 
+
   tensor_fill(t);
   tensor_print(t);
   // tests: free tensor
