@@ -6,7 +6,7 @@ A tensor is a multidimensional matrix holding elements of a single data type.
 Author: oggyfoxy
 
 */
-
+#include <stdbool.h>
 #ifndef TENSOR_H
 #define TENSOR_H
 
@@ -32,17 +32,31 @@ typedef struct {
 
 
 // interface
-tensor_t* tensor_create(int ndim, size_t* shape);
-void free_tensor(tensor_t* t);
-void print_tensor(tensor_t* t);
-void fill_tensor(tensor_t* t);
+tensor_t* tensor_create(int ndim, size_t* shape); // done
+void free_tensor(tensor_t* t); // done
+void print_tensor(tensor_t* t); // done
+void fill_tensor(tensor_t* t); // done
 
-// access ops
-void* tensor_get(tensor_t*, size_t* indices);
-void tensor_set(tensor_t*, size_t* indices, void value);
+// access ops (need to make general access ops)
+// void* tensor_get(tensor_t*, size_t* indices);
+// void tensor_set(tensor_t*, size_t* indices);
+
+// getters 
+float tensor_get1d(tensor_t* t, int i);
+float tensor_get2d(tensor_t* t, int i, int j);
+float tensor_get3d(tensor_t* t, int i, int j, int k);
+float tensor_get4d(tensor_t* t, int i, int j, int k, int l);
+
+// setters
+bool tensor_set1d(tensor_t* t, int i, float value);
+bool tensor_set2d(tensor_t* t, int i, int j, float value);
+bool tensor_set3d(tensor_t* t, int i, int j, int k, float value);
+bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value);
 
 // basic ops
 tensor_t* tensor_add(tensor_t* a, tensor_t* b); // returns a new tensor 
-tensor_t* tensor_sub(tensor_t* a, tensor_t* b); // returns a new tensor
+tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
+
+
 
 #endif

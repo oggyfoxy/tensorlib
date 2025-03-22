@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tensor.h"
+#include <stdbool.h>
 
 // allocates a tensor struct in memory
 tensor_t* create_tensor(int ndim, size_t* shape) {
@@ -86,16 +87,82 @@ void tensor_fill(tensor_t* t) {
   }
 }
 
-size_t* get_shape(tensor_t* t) {
-  return t->shape;
+// different getters for each dimension
+float tensor_get1d(tensor_t* t, int i) {
+  if (t->ndim != 1 || i >= t->shape[0]) 
+    return 0.0f;
+
+  int idx = i;
+  return ((float*)t->data)[idx];
+}
+
+float tensor_get2d(tensor_t* t, int i, int j) {
+  if (t->ndim != 2 || i >= t->shape[0] || j >= t->shape[1])
+    return 0.0f;
+
+
+   int idx = i * t->stride[0] + j;
+   return ((float*)t->data)[idx];
+}
+
+
+float tensor_get3d(tensor_t* t, int i, int j, int k) {
+  if (t->ndim != 3 || i >= t->shape[0] || j >= t->shape[1] || k >= t->shape[2])
+    return 0.0f;
+
+  int idx = i * t->stride[0] + j * t->stride[1] + k;
+  return ((float*)t->data)[idx];
 
 }
 
-void* tensor_get(tensor_t*, size_t* indices);
+float tensor_get4d(tensor_t* t, int i, int j, int k, int l) {
+  if (t->ndim != 4 || i >= t->shape[0] || j >= t->shape[1] || k >= t->shape[2] || l >= t->shape[3])
+    return 0.0f;
 
-void tensor_set(tensor_t*, size_t* indices, void* value);
+  int idx = i * t->stride[0] + j * t->stride[1] + k * t->stride[2] + l;
+  return ((float*)t->data)[idx];
+
+}
+
+// different setters for each dimensions
+bool tensor_set1d(tensor_t* t, int i, float value) {
+  if (t->ndim != 1 || i >= t->shape[0]) 
+    return false;
+
+  int idx = i;
+  ((float*)t->data)[idx] = value;
+  return true;
+}
 
 
+bool tensor_set2d(tensor_t* t, int i, int j, float value) {
+  if (t->ndim != 2 || i >= t->shape[0] || j >= t->shape[1])
+    return false;
+
+  int idx = i * t->stride[0] + j;
+  ((float*)t->data)[idx] = value;
+  return true;
+}
+
+
+bool tensor_set3d(tensor_t* t, int i, int j, int k, float value) {
+  if (t->ndim != 3 || i >= t->shape[0] || j >= t->shape[1] || k >= t->shape[2])
+    return false;
+
+  int idx = i * t->stride[0] + j * t->stride[1] + k;
+  ((float*)t->data)[idx] = value;
+  return true;
+}
+
+
+bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value) {
+  if (t->ndim != 4 || i >= t->shape[0] || j >= t->shape[1] || k >= t->shape[2] || l >= t->shape[3])
+    return false;
+
+  int idx = i * t->stride[0] + j * t->stride[1] + k * t->stride[2] + l;
+  ((float*)t->data)[idx] = value;
+  return true;
+}
 
 int
 main (int argc, char* argv[]) {
@@ -108,20 +175,22 @@ main (int argc, char* argv[]) {
   
   printf("Shape: [%zu, %zu]\n", t->shape[0], t->shape[1]);
   
-  size_t* shape_ptr = get_shape(t);
-  printf("%p\n", (void*)shape_ptr); 
-
   tensor_fill(t);
+
+  // bool one_d = tensor_set1d(t, 4, 29);
+  // float two_d = tensor_get2d(t, 2, 1);
+  float three_d = tensor_get3d(t, 0, 2, 3);
+  printf("element at 2d: %f\n", three_d);
+
   tensor_print(t);
+
   // tests: free tensor
   free_tensor(t);
+
   t = NULL;
   printf("Tensor freed\n");
   printf("Tensor location after freeing: %p\n", (void*)t);
   return 0;
 }
-
-
-
 
 
