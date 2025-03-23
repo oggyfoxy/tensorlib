@@ -20,6 +20,11 @@ typedef enum {
   // add more if necessary..
 } dtype_t;
 
+typedef enum {
+  GPU,
+  CPU,
+} Device;
+
 
 typedef struct {
   size_t* shape; // gets the number of dimensions (dynamic)
