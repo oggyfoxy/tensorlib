@@ -3,9 +3,15 @@
 #include <string.h>
 #include "tensor.h"
 #include <stdbool.h>
+#include <time.h> // benchmark perf
+
+
+// TODO: add unitary testing https://github.com/ThrowTheSwitch/Unity/tree/master
+// benchmark tool on m4 max / m2 pro, ssh into i5-9600k to use AVX/SIMD intrinsics
+
 
 // allocates a tensor struct in memory
-tensor_t* create_tensor(int ndim, size_t* shape) {
+tensor_t* tensor_create(int ndim, size_t* shape) {
   tensor_t* t = (tensor_t*)malloc(sizeof(tensor_t)); // allocate memory for a tensor on the heap
   t->ndim = ndim;
   
@@ -57,7 +63,7 @@ tensor_t* create_tensor(int ndim, size_t* shape) {
 
 
 // frees this tensor
-void free_tensor(tensor_t* t) {
+void tensor_free(tensor_t* t) {
   if (t == NULL) return;
   if (t->data != NULL) free(t->data);
   if (t->shape != NULL) free(t->shape);
@@ -164,11 +170,126 @@ bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value) {
   return true;
 }
 
+tensor_t* tensor_add(tensor_t* a, tensor_t* b) {
+
+	if (a->ndim != b->ndim) return NULL;
+	for (int i = 0; i < a->ndim; i++) {
+		if (a->shape[i] != b->shape[i]) return NULL;
+	}
+
+	tensor_t* t = tensor_create(a->ndim, a->shape);
+
+	float* a_data = (float*)a->data;
+	float* b_data = (float*)b->data;
+	float* t_data = (float*)t->data;
+	for (int i = 0; i < a->total_size; i++ ) {
+		t_data[i] = a_data[i] + b_data[i];
+	}
+	return t; 
+}
+
+tensor_t* tensor_sub(tensor_t* a, tensor_t* b) {
+
+	if (a->ndim != b->ndim) return NULL;
+	for (int i = 0; i < a->ndim; i++) {
+		if (a->shape[i] != b->shape[i]) return NULL;
+	}
+
+	tensor_t* t = tensor_create(a->ndim, a->shape);
+
+	float* a_data = (float*)a->data;
+	float* b_data = (float*)b->data;
+	float* t_data = (float*)t->data;
+	for (int i = 0; i < a->total_size; i++ ) {
+		t_data[i] = a_data[i] -  b_data[i];
+	}
+	return t;
+}
+
+tensor_t* tensor_div(tensor_t* a, tensor_t* b) {
+
+	if (a->ndim != b->ndim) return NULL;
+	for (int i = 0; i < a->ndim; i++) {
+		if (a->shape[i] != b->shape[i]) return NULL;
+	}
+
+	tensor_t* t = tensor_create(a->ndim, a->shape);
+
+	float* a_data = (float*)a->data;
+	float* b_data = (float*)b->data;
+	float* t_data = (float*)t->data;
+	for (int i = 0; i < a->total_size; i++ ) {
+		t_data[i] = a_data[i] /  b_data[i];
+	}
+	return t;
+}
+
+tensor_t* tensor_mul(tensor_t* a, tensor_t* b) {
+
+	if (a->ndim != b->ndim) return NULL;
+	for (int i = 0; i < a->ndim; i++) {
+		if (a->shape[i] != b->shape[i]) return NULL;
+	}
+
+	tensor_t* t = tensor_create(a->ndim, a->shape);
+
+	float* a_data = (float*)a->data;
+	float* b_data = (float*)b->data;
+	float* t_data = (float*)t->data;
+	for (int i = 0; i < a->total_size; i++ ) {
+		t_data[i] = a_data[i] *  b_data[i];
+	}
+
+	return t;
+
+}
+
+tensor_t* matmul(tensor_t* a, tensor_t* b) {
+
+
+	int m = a->shape[0]; // A's rows
+	int n = a->shape[1]; // A's cols
+	int p = b->shape[1]; // B's cols
+
+	c[i,j] = 0;
+
+	// i = rows, j = cols, k = shared dims
+	for (int i = 0; i < m; i++) {
+		for (int j=0; j<n; j++) {
+			c[i,j] = 0;
+			
+			//strides
+
+			for (int k = 0; k < 
+		}
+	}
+
+}
+//tensor_t* dot
+
+
+
 int
 main (int argc, char* argv[]) {
-  
+	
   size_t shape[] = {2,3,4};
-  tensor_t* t = create_tensor(3, shape);
+
+	tensor_t* t = tensor_create(2, shape);
+
+  tensor_t* a = tensor_create(3, shape);
+  tensor_t* b = tensor_create(3, shape);
+
+	tensor_fill(a);
+	tensor_print(a);
+	tensor_fill(b);
+	tensor_print(b);
+
+	tensor_t* result = tensor_div(a, b);
+	tensor_print(result);
+	
+	tensor_free(a);
+	tensor_free(b);
+	tensor_free(result);
 
   printf("Created tensor at %p\n", (void*)t);
   printf("Dimensions: %d\n", t->ndim);
@@ -176,6 +297,7 @@ main (int argc, char* argv[]) {
   printf("Shape: [%zu, %zu]\n", t->shape[0], t->shape[1]);
   
   tensor_fill(t);
+
 
   // bool one_d = tensor_set1d(t, 4, 29);
   // float two_d = tensor_get2d(t, 2, 1);
@@ -185,7 +307,8 @@ main (int argc, char* argv[]) {
   tensor_print(t);
 
   // tests: free tensor
-  free_tensor(t);
+
+	tensor_free(t);
 
   t = NULL;
   printf("Tensor freed\n");

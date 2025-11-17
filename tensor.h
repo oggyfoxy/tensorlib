@@ -28,7 +28,7 @@ typedef enum {
 
 typedef struct {
   size_t* shape; // gets the number of dimensions (dynamic)
-  void* data; // to not get stuck constrained in one type
+  void* data; // to not get stuck constrained in one type (you should type cast)
   // dtype_t dtype; // what type is our tensor: float64, float32, bf16, int8, uint8 etc. not really important as of now
   int* stride; // how many memory jumps to go to the next element in that dimension. stride(0) = row. stride(1) = column
   int total_size; // total nbr of elements
@@ -38,9 +38,9 @@ typedef struct {
 
 // interface
 tensor_t* tensor_create(int ndim, size_t* shape); // done
-void free_tensor(tensor_t* t); // done
-void print_tensor(tensor_t* t); // done
-void fill_tensor(tensor_t* t); // done
+void tensor_free(tensor_t* t); // done
+void tensor_print(tensor_t* t); // done
+void tensor_fill(tensor_t* t); // done
 
 // access ops (need to make general access ops)
 // void* tensor_get(tensor_t*, size_t* indices);
@@ -60,6 +60,8 @@ bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value);
 
 // basic ops
 tensor_t* tensor_add(tensor_t* a, tensor_t* b); // returns a new tensor 
+tensor_t* tensor_sub(tensor_t* a, tensor_t* b); // returns a new tensor 
+tensor_t* tensor_div(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
 
 
