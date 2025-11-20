@@ -65,5 +65,12 @@ tensor_t* tensor_div(tensor_t* a, tensor_t* b); // returns a new tensor
 tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
 
 
+// matrix multiplication
+
+tensor_t* matmul(tensor_t* a, tensor_t* b); // naive implem works for ndim = 2.
+// TODO: reshape (returns the same data as original tensor but with new shape)
+// unary ops: exp2, log2, sqrt, sin 
+// binary ops: practically done, need to matmul, transpose, reshape (basic reductions)
+// other movement ops: expand, squeeze, permute
 
 #endif

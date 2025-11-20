@@ -245,26 +245,41 @@ tensor_t* tensor_mul(tensor_t* a, tensor_t* b) {
 }
 
 tensor_t* matmul(tensor_t* a, tensor_t* b) {
-
+	
+	// A = m rows, n columns
+	// B = n rows, p columns
+	// C = m rows, p columns
 
 	int m = a->shape[0]; // A's rows
 	int n = a->shape[1]; // A's cols
 	int p = b->shape[1]; // B's cols
 
-	c[i,j] = 0;
+	size_t c_shape[2] = { (size_t)m, (size_t)p };
+	tensor_t* c = tensor_create(2, c_shape);
+	
 
-	// i = rows, j = cols, k = shared dims
+	float* a_data = (float*)a->data;
+	float* b_data = (float*)b->data;
+	float* c_data = (float*)c->data;
+
+	// i = row index, j = col index, k = shared dims
 	for (int i = 0; i < m; i++) {
-		for (int j=0; j<n; j++) {
-			c[i,j] = 0;
+		for (int j = 0; j < p; j++) {
+			float sum = 0.0f;	
 			
-			//strides
+			// shared dimension: n. k loops
+			for (int k = 0; k < n; k++) {
+				sum += a_data[i*n + k] * b_data[k*p + j]; // index = row * WIDTH + col
+			}
 
-			for (int k = 0; k < 
+			c_data[i*p + j] = sum;
 		}
 	}
+	
+	return c;
 
 }
+
 //tensor_t* dot
 
 
@@ -272,30 +287,34 @@ tensor_t* matmul(tensor_t* a, tensor_t* b) {
 int
 main (int argc, char* argv[]) {
 	
-  size_t shape[] = {2,3,4};
+  size_t shape[] = {3,2};
+  size_t shape1[] = {2,3};
+  size_t shape2[] = {3,2};
 
 	tensor_t* t = tensor_create(2, shape);
 
-  tensor_t* a = tensor_create(3, shape);
-  tensor_t* b = tensor_create(3, shape);
+  tensor_t* a = tensor_create(2, shape1);
+  tensor_t* b = tensor_create(2, shape2);
 
 	tensor_fill(a);
 	tensor_print(a);
 	tensor_fill(b);
 	tensor_print(b);
 
-	tensor_t* result = tensor_div(a, b);
+	tensor_t* result = matmul(a, b);
 	tensor_print(result);
 	
-	tensor_free(a);
+  printf("Created tensor at %p\n", (void*)result);
+  printf("Dimensions: %d\n", result->ndim);
+  
+  printf("Shape: [%zu, %zu]\n", result->shape[0], result->shape[1]);
+
+
+ 	tensor_free(a);
 	tensor_free(b);
 	tensor_free(result);
 
-  printf("Created tensor at %p\n", (void*)t);
-  printf("Dimensions: %d\n", t->ndim);
-  
-  printf("Shape: [%zu, %zu]\n", t->shape[0], t->shape[1]);
-  
+ 
   tensor_fill(t);
 
 
@@ -315,5 +334,8 @@ main (int argc, char* argv[]) {
   printf("Tensor location after freeing: %p\n", (void*)t);
   return 0;
 }
+
+
+
 
 
