@@ -4,7 +4,7 @@
 #include "tensor.h"
 #include <stdbool.h>
 #include <time.h> // benchmark perf
-
+#include <math.h>
 
 // TODO: add unitary testing https://github.com/ThrowTheSwitch/Unity/tree/master
 // benchmark tool on m4 max / m2 pro, ssh into i5-9600k to use AVX/SIMD intrinsics
@@ -170,6 +170,11 @@ bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value) {
   return true;
 }
 
+
+
+
+// Binary OPs /*---------------------------------------------------------------------------*/
+
 tensor_t* tensor_add(tensor_t* a, tensor_t* b) {
 
 	if (a->ndim != b->ndim) return NULL;
@@ -257,11 +262,10 @@ tensor_t* matmul(tensor_t* a, tensor_t* b) {
 	size_t c_shape[2] = { (size_t)m, (size_t)p };
 	tensor_t* c = tensor_create(2, c_shape);
 	
-
 	float* a_data = (float*)a->data;
 	float* b_data = (float*)b->data;
 	float* c_data = (float*)c->data;
-
+	
 	// i = row index, j = col index, k = shared dims
 	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < p; j++) {
@@ -280,28 +284,65 @@ tensor_t* matmul(tensor_t* a, tensor_t* b) {
 
 }
 
-//tensor_t* dot
+// Unary OPs /*---------------------------------------------------------------------------*/
+
+typedef float (*unary_func_t)(float);
+
+void tensor_apply_unary(tensor_t* t, unary_func_t func) {
+	float* data = (float*)t->data;
+	
+
+	// pragma once simd 
+	for (int i = 0; i < t->total_size; i++) {
+		data[i] = func(data[i]);
+	}
+}
+
+
+void tensor_log2(tensor_t* t) { tensor_apply_unary(t, log2f); } 
+void tensor_exp2(tensor_t* t) { tensor_apply_unary(t, exp2f); } 
+void tensor_sin(tensor_t* t) { tensor_apply_unary(t, sinf); } 
+void tensor_sqrt(tensor_t* t) { tensor_apply_unary(t, sqrtf); }
 
 
 
+void tensor_neg(tensor_t* t) { 
+	float* data = (float*)t->data;
+	for (int i = 0; i < t->total_size; i++) {
+		data[i] = -data[i];
+	}
+}
+
+
+
+// main loop, testing -> will refactor to proper testing files
 int
 main (int argc, char* argv[]) {
 	
-  size_t shape[] = {3,2};
-  size_t shape1[] = {2,3};
-  size_t shape2[] = {3,2};
+	// lets assume square matrices
+  size_t shape[] = {2,2}; 
+  size_t shape1[] = {16,16};
+  size_t shape2[] = {16,16};
 
-	tensor_t* t = tensor_create(2, shape);
+	tensor_t* result = tensor_create(2, shape);
 
   tensor_t* a = tensor_create(2, shape1);
   tensor_t* b = tensor_create(2, shape2);
 
 	tensor_fill(a);
-	tensor_print(a);
+	// tensor_print(a);
 	tensor_fill(b);
-	tensor_print(b);
+	// tensor_print(b);
 
-	tensor_t* result = matmul(a, b);
+	tensor_fill(result);
+	//	tensor_t* result = tensor_log2(t);
+	
+
+	tensor_neg(result);
+	//	tensor_sqrt(result);
+	//tensor_exp2(result);
+	//tensor_log2(result);
+	//tensor_sin(result);
 	tensor_print(result);
 	
   printf("Created tensor at %p\n", (void*)result);
@@ -314,24 +355,21 @@ main (int argc, char* argv[]) {
 	tensor_free(b);
 	tensor_free(result);
 
- 
-  tensor_fill(t);
-
 
   // bool one_d = tensor_set1d(t, 4, 29);
   // float two_d = tensor_get2d(t, 2, 1);
-  float three_d = tensor_get3d(t, 0, 2, 3);
-  printf("element at 2d: %f\n", three_d);
+	//  float three_d = tensor_get3d(t, 0, 2, 3);
+ 	//  printf("element at 2d: %f\n", three_d);
 
-  tensor_print(t);
+	// tensor_print(t);
 
   // tests: free tensor
 
-	tensor_free(t);
+	// tensor_free(t);
 
-  t = NULL;
-  printf("Tensor freed\n");
-  printf("Tensor location after freeing: %p\n", (void*)t);
+  //t = NULL;
+  // printf("Tensor freed\n");
+  // printf("Tensor location after freeing: %p\n", (void*)t);
   return 0;
 }
 

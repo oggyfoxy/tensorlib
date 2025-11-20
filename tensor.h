@@ -58,19 +58,35 @@ bool tensor_set2d(tensor_t* t, int i, int j, float value);
 bool tensor_set3d(tensor_t* t, int i, int j, int k, float value);
 bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value);
 
-// basic ops
+// Unary OPs /*---------------------------------------------------------------------------*/
+
+void tensor_exp2(tensor_t* t);
+void tensor_log2(tensor_t* t);
+void tensor_sqrt(tensor_t* t);
+void tensor_sin(tensor_t* t);
+void tensor_neg(tensor_t* t);
+
+
+// Binary OPs /*---------------------------------------------------------------------------*/
 tensor_t* tensor_add(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_sub(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_div(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
 
 
-// matrix multiplication
+
+// Movement OPs /*---------------------------------------------------------------------------*/
+
 
 tensor_t* matmul(tensor_t* a, tensor_t* b); // naive implem works for ndim = 2.
 // TODO: reshape (returns the same data as original tensor but with new shape)
-// unary ops: exp2, log2, sqrt, sin 
-// binary ops: practically done, need to matmul, transpose, reshape (basic reductions)
-// other movement ops: expand, squeeze, permute
+// unary ops: exp2, log2, sqrt, sin, neg, relu 
+// binary ops: practically done, need to matmul (basic reductions)
+// shape / movement ops: reshape, permute, squeeze, slice 
+
+// reduction ops: sum / mean
+
+// --> can build softmax, norms, etc
+
 
 #endif
