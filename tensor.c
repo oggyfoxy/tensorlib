@@ -15,7 +15,8 @@
 
 
 
-// allocates a tensor struct in memory
+// allocates a tensor struct in memory (v2)
+// TODO: v3 add alignment 
 tensor_t* tensor_create(int ndim, size_t* shape) {
   
   // size
@@ -66,11 +67,7 @@ tensor_t* tensor_create(int ndim, size_t* shape) {
 
 // frees this tensor
 void tensor_free(tensor_t* t) {
-  if (t == NULL) return;
-  if (t->data != NULL) free(t->data);
-  if (t->shape != NULL) free(t->shape);
-  if (t->stride != NULL) free(t->stride);
-  free(t);
+  if (t) free(t);
 }
 
 
@@ -326,7 +323,7 @@ main (int argc, char* argv[]) {
   size_t shape1[] = {16,16};
   size_t shape2[] = {16,16};
 
-	tensor_t* result = tensor_create(2, shape);
+	// tensor_t* result = tensor_create(2, shape);
 
   tensor_t* a = tensor_create(2, shape1);
   tensor_t* b = tensor_create(2, shape2);
@@ -336,8 +333,8 @@ main (int argc, char* argv[]) {
 	tensor_fill(b);
 	// tensor_print(b);
 
+	tensor_t* result = matmul(a,b);
 	tensor_fill(result);
-	//	tensor_t* result = tensor_log2(t);
 	
 
 	tensor_neg(result);
