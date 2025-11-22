@@ -8,8 +8,11 @@ TODO:
 - tensor initialization [V]
 - tensor_get, tensor_set, tensor_print, tensor_fill (before ops) [V]
 - unary / binary ops [in progress)
+- movement ops
 - android support: arm neon intrinsics [X]
 - alignment, advanced ops, ... 
+- think about quantization
+
 
 will set up a guide and testing suite once more advancements are made
 

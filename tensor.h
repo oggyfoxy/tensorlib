@@ -46,11 +46,18 @@ void tensor_fill(tensor_t* t); // done
 // void* tensor_get(tensor_t*, size_t* indices);
 // void tensor_set(tensor_t*, size_t* indices);
 
-// getters 
+
+// Getters /*-----------------------------------------------------------------------------*/
+
 float tensor_get1d(tensor_t* t, int i);
 float tensor_get2d(tensor_t* t, int i, int j);
 float tensor_get3d(tensor_t* t, int i, int j, int k);
 float tensor_get4d(tensor_t* t, int i, int j, int k, int l);
+
+
+
+bool is_contiguous(tensor_t* t);
+
 
 // setters
 bool tensor_set1d(tensor_t* t, int i, float value);
@@ -58,7 +65,7 @@ bool tensor_set2d(tensor_t* t, int i, int j, float value);
 bool tensor_set3d(tensor_t* t, int i, int j, int k, float value);
 bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value);
 
-// Unary OPs /*---------------------------------------------------------------------------*/
+// Unary OPs /*----------------------------------------------------------------------------*/
 
 void tensor_exp2(tensor_t* t);
 void tensor_log2(tensor_t* t);
@@ -75,7 +82,7 @@ tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
 
 
 
-// Movement OPs /*---------------------------------------------------------------------------*/
+// Movement OPs /*-------------------------------------------------------------------------*/
 
 
 tensor_t* matmul(tensor_t* a, tensor_t* b); // naive implem works for ndim = 2.

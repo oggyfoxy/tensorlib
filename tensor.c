@@ -5,58 +5,60 @@
 #include <stdbool.h>
 #include <time.h> // benchmark perf
 #include <math.h>
+#include <arm_neon.h> // optimization
+#include <stdint.h>
+
 
 // TODO: add unitary testing https://github.com/ThrowTheSwitch/Unity/tree/master
 // benchmark tool on m4 max / m2 pro, ssh into i5-9600k to use AVX/SIMD intrinsics
+// arm neon https://developer.arm.com/architectures/instruction-sets/intrinsics/
+
 
 
 // allocates a tensor struct in memory
 tensor_t* tensor_create(int ndim, size_t* shape) {
-  tensor_t* t = (tensor_t*)malloc(sizeof(tensor_t)); // allocate memory for a tensor on the heap
-  t->ndim = ndim;
   
-  // allocate shape array
-  t->shape = (size_t*)malloc(ndim * sizeof(size_t));
-  
-  // check if shape allocation failed
-  if (!t->shape) {
-    free(t);
-    return NULL;
+  // size
+  int total_size = 1;
+  for (int i = 0; i < ndim; i++) {
+    total_size *= shape[i];
   }
 
+	// calculate nbr of bytes for each part we allocate
+	size_t size_struct = sizeof(tensor_t);
+	size_t size_shape = ndim * sizeof(size_t);
+	size_t size_stride = ndim * sizeof(int);
+	size_t size_data = total_size * sizeof(float);
+
+	// allocates an array of 1 object of total size and inits all bytes to zero
+	// we use uint8_t for byte-level precision
+	uint8_t* memory = (uint8_t*)calloc(1, size_struct + size_shape + size_stride + size_data);
+	if (!memory) return NULL;
+
+
+	// distributing the memory
+	tensor_t* t = (tensor_t*)memory;
+
+
+	t->shape = (size_t*)(memory + size_struct); 
+	t->stride = (int*)(memory + size_struct + size_shape);
+	t->data = (float*)(memory + size_struct + size_shape + size_stride);
+
+
+  t->ndim = ndim;
+	t->total_size = total_size;
+	// copy shape 
   for (int i = 0; i < ndim; i++)
     t->shape[i] = shape[i];
 
 
-  // allocate stride array
-  t->stride = (int*)malloc(ndim * sizeof(int));
-
-  if (!t->stride) {
-    free(t);
-    return NULL;
-  }
-
-  // calculate strides with row-major order
+		
+	// calculate strides with row-major order
   t->stride[ndim-1] = 1;
   for (int i = ndim-2; i >= 0; i--)
     t->stride[i] = t->stride[i+1] * shape[i+1];
 
-  // size
-  t->total_size = 1;
-  for (int i = 0; i < ndim; i++) {
-    t->total_size *= shape[i];
-  }
 
-  // allocate data in memory and set it to 0
-  t->data = calloc(t->total_size, sizeof(float)); // use float as implicit default
-
-  // check if allocation failed
-  if (!t->data) {
-    free(t->stride);
-    free(t->shape);
-    free(t);
-    return NULL;
-  }
 
   return t;
 } 
@@ -305,7 +307,7 @@ void tensor_sin(tensor_t* t) { tensor_apply_unary(t, sinf); }
 void tensor_sqrt(tensor_t* t) { tensor_apply_unary(t, sqrtf); }
 
 
-
+// cant apply unary_func_t here
 void tensor_neg(tensor_t* t) { 
 	float* data = (float*)t->data;
 	for (int i = 0; i < t->total_size; i++) {
