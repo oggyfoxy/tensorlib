@@ -49,15 +49,15 @@ void tensor_fill(tensor_t* t); // done
 
 // Getters /*-----------------------------------------------------------------------------*/
 
-float tensor_get1d(tensor_t* t, int i);
-float tensor_get2d(tensor_t* t, int i, int j);
+//TODO change int to size_t for getters and setters
+
+
+float tensor_get1d(tensor_t* t, size_t i);
+float tensor_get2d(tensor_t* t, size_t i, size_t j);
 float tensor_get3d(tensor_t* t, int i, int j, int k);
 float tensor_get4d(tensor_t* t, int i, int j, int k, int l);
 
-
-
 bool is_contiguous(tensor_t* t);
-
 
 // setters
 bool tensor_set1d(tensor_t* t, int i, float value);

@@ -93,7 +93,7 @@ void tensor_fill(tensor_t* t) {
 }
 
 // different getters for each dimension
-float tensor_get1d(tensor_t* t, int i) {
+float tensor_get1d(tensor_t* t, size_t i) {
   if (t->ndim != 1 || i >= t->shape[0]) 
     return 0.0f;
 
@@ -101,7 +101,7 @@ float tensor_get1d(tensor_t* t, int i) {
   return ((float*)t->data)[idx];
 }
 
-float tensor_get2d(tensor_t* t, int i, int j) {
+float tensor_get2d(tensor_t* t, size_t i, size_t j) {
   if (t->ndim != 2 || i >= t->shape[0] || j >= t->shape[1])
     return 0.0f;
 
@@ -283,6 +283,7 @@ tensor_t* matmul(tensor_t* a, tensor_t* b) {
 
 }
 
+
 // Unary OPs /*---------------------------------------------------------------------------*/
 
 typedef float (*unary_func_t)(float);
@@ -313,8 +314,26 @@ void tensor_neg(tensor_t* t) {
 }
 
 
+// if its contiguous return true, else false
+// check if strides are contiguous between dimensions
+bool is_contiguous(tensor_t* t) {
+	int expected = 1; 
+	for (int i = t->ndim-1; i >= 0; --i) {
+		if (t->stride[i] != expected) { 
+			return false;
+		}
+		expected *= (int)t->shape[i];
+	}
+	return true;
+}
+
+
 
 // main loop, testing -> will refactor to proper testing files
+
+#ifdef TENSORLIB_DEMO
+
+
 int
 main (int argc, char* argv[]) {
 	
@@ -331,29 +350,39 @@ main (int argc, char* argv[]) {
 	tensor_fill(a);
 	// tensor_print(a);
 	tensor_fill(b);
-	// tensor_print(b);
-
-	tensor_t* result = matmul(a,b);
-	tensor_fill(result);
 	
 
-	tensor_neg(result);
+	// tensor_print(b);
+
+	tensor_t* t = tensor_create(2,shape);
+	tensor_fill(t);
+	printf("struct: %p\n", (void*)t);
+	printf("data:   %p\n", t->data);
+	printf("diff:   %ld bytes\n", (uint8_t*)t->data - (uint8_t*)t);
+
+
+
+	//tensor_t* result = matmul(a,b);
+	//tensor_fill(result);
+	
+
+	//tensor_neg(result);
 	//	tensor_sqrt(result);
 	//tensor_exp2(result);
 	//tensor_log2(result);
 	//tensor_sin(result);
-	tensor_print(result);
+	//tensor_print(result);
 	
-  printf("Created tensor at %p\n", (void*)result);
-  printf("Dimensions: %d\n", result->ndim);
+  // printf("Created tensor at %p\n", (void*)result);
+  // printf("Dimensions: %d\n", result->ndim);
   
-  printf("Shape: [%zu, %zu]\n", result->shape[0], result->shape[1]);
+  //printf("Shape: [%zu, %zu]\n", result->shape[0], result->shape[1]);
 
 
  	tensor_free(a);
 	tensor_free(b);
-	tensor_free(result);
-
+	//	tensor_free(result);
+	tensor_free(t);
 
   // bool one_d = tensor_set1d(t, 4, 29);
   // float two_d = tensor_get2d(t, 2, 1);
@@ -372,7 +401,7 @@ main (int argc, char* argv[]) {
   return 0;
 }
 
-
+#endif // TENSORLIB_DEMO
 
 
 
