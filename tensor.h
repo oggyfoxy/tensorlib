@@ -1,12 +1,15 @@
+
 /*
+ *   Tensor header, defining necessary structs to have a working tensor.
+ *   A tensor is a multidimensional matrix holding elements of a single data type.
+ *
+ *   Author: @oggyfoxy
+ *
+ */
 
-Tensor header, defining necessary structs to have a working tensor.
-A tensor is a multidimensional matrix holding elements of a single data type.
 
-Author: oggyfoxy
-
-*/
 #include <stdbool.h>
+
 #ifndef TENSOR_H
 #define TENSOR_H
 
@@ -29,22 +32,26 @@ typedef enum {
 typedef struct {
   size_t* shape; // gets the number of dimensions (dynamic)
   void* data; // to not get stuck constrained in one type (you should type cast)
-  // dtype_t dtype; // what type is our tensor: float64, float32, bf16, int8, uint8 etc. not really important as of now
-  int* stride; // how many memory jumps to go to the next element in that dimension. stride(0) = row. stride(1) = column
+  // dtype_t dtype; // what type is our tensor: float64, float32, bf16, int8,
+  //  uint8 etc. not really important as of now
+  int* stride; // how many memory jumps to go to the next element in that dimension
+  // stride(0) = row. stride(1) = column
   int total_size; // total nbr of elements
   int ndim;
+  bool own_data; // does the tensor own this memory? 
 } tensor_t;
 
 
-// interface
+// tensor interface
 tensor_t* tensor_create(int ndim, size_t* shape); // done
 void tensor_free(tensor_t* t); // done
 void tensor_print(tensor_t* t); // done
 void tensor_fill(tensor_t* t); // done
 
+// TODO
 // access ops (need to make general access ops)
-// void* tensor_get(tensor_t*, size_t* indices);
-// void tensor_set(tensor_t*, size_t* indices);
+// float tensor_get(tensor_t*, size_t* indices);
+// bool tensor_set(tensor_t*, size_t* indices);
 
 
 // Getters /*-----------------------------------------------------------------------------*/
@@ -59,7 +66,7 @@ float tensor_get4d(tensor_t* t, int i, int j, int k, int l);
 
 bool is_contiguous(tensor_t* t);
 
-// setters
+// Setters /*-----------------------------------------------------------------------------*/
 bool tensor_set1d(tensor_t* t, int i, float value);
 bool tensor_set2d(tensor_t* t, int i, int j, float value);
 bool tensor_set3d(tensor_t* t, int i, int j, int k, float value);
@@ -86,14 +93,17 @@ tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
 
 
 tensor_t* matmul(tensor_t* a, tensor_t* b); // naive implem works for ndim = 2.
-// TODO: reshape (returns the same data as original tensor but with new shape)
-// unary ops: exp2, log2, sqrt, sin, neg, relu 
-// binary ops: practically done, need to matmul (basic reductions)
-// shape / movement ops: reshape, permute, squeeze, slice 
 
-// reduction ops: sum / mean
+/* TODO
+ * reduction primitive: sum, mean, min/max, 
+ * shape / movement ops: reshape, permute (transpose), squeeze, slice 
+ */ 
 
-// --> can build softmax, norms, etc
+
+// matmul primitive  --> can build softmax, norms, linear layers, etc
 
 
 #endif
+
+
+

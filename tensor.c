@@ -1,22 +1,22 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tensor.h"
-#include <stdbool.h>
-#include <time.h> // benchmark perf
+#include <stdbool.h> 
 #include <math.h>
-#include <arm_neon.h> // optimization
 #include <stdint.h>
+//#include <arm_neon.h> // optimizations 
 
 
-// TODO: add unitary testing https://github.com/ThrowTheSwitch/Unity/tree/master
+#include "tensor.h"
+
 // benchmark tool on m4 max / m2 pro, ssh into i5-9600k to use AVX/SIMD intrinsics
 // arm neon https://developer.arm.com/architectures/instruction-sets/intrinsics/
 
 
 
 // allocates a tensor struct in memory (v2)
-// TODO: v3 add alignment 
+// TODO v3 add alignment 
 tensor_t* tensor_create(int ndim, size_t* shape) {
   
   // size
@@ -83,7 +83,6 @@ void tensor_print(tensor_t* t) {
   printf("\n)\n");
 }
 
-
 // fills tensor with data from 0 to max size
 void tensor_fill(tensor_t* t) {
   float* float_data = (float*)t->data;
@@ -92,7 +91,10 @@ void tensor_fill(tensor_t* t) {
   }
 }
 
-// different getters for each dimension
+
+
+// Getters /*-----------------------------------------------------------------------------*/
+
 float tensor_get1d(tensor_t* t, size_t i) {
   if (t->ndim != 1 || i >= t->shape[0]) 
     return 0.0f;
@@ -129,7 +131,14 @@ float tensor_get4d(tensor_t* t, int i, int j, int k, int l) {
 
 }
 
-// different setters for each dimensions
+// TODO single getter for n dimensions
+float tensor_get(tensor_t* t, size_t); 
+
+
+
+
+
+// Setters /*-----------------------------------------------------------------------------*/
 bool tensor_set1d(tensor_t* t, int i, float value) {
   if (t->ndim != 1 || i >= t->shape[0]) 
     return false;
@@ -169,8 +178,37 @@ bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value) {
   return true;
 }
 
+//TODO single setter for n dimensions (probably need helper function)
+
+bool tensor_set(tensor_t* t, int ndim, float value);
+
+// Unary OPs /*---------------------------------------------------------------------------*/
+
+typedef float (*unary_func_t)(float);
+
+void tensor_apply_unary(tensor_t* t, unary_func_t func) {
+	float* data = (float*)t->data;
+	
+	// pragma once simd 
+	for (int i = 0; i < t->total_size; i++) {
+		data[i] = func(data[i]);
+	}
+}
 
 
+void tensor_log2(tensor_t* t) { tensor_apply_unary(t, log2f); } 
+void tensor_exp2(tensor_t* t) { tensor_apply_unary(t, exp2f); } 
+void tensor_sin(tensor_t* t) { tensor_apply_unary(t, sinf); } 
+void tensor_sqrt(tensor_t* t) { tensor_apply_unary(t, sqrtf); }
+
+
+// cant apply unary_func_t here
+void tensor_neg(tensor_t* t) { 
+	float* data = (float*)t->data;
+  for (int i = 0; i < t->total_size; i++) {
+		data[i] = -data[i];
+	}
+}
 
 // Binary OPs /*---------------------------------------------------------------------------*/
 
@@ -248,6 +286,9 @@ tensor_t* tensor_mul(tensor_t* a, tensor_t* b) {
 
 }
 
+
+
+//TODO optimize matmul as much as needed (lean into GEMM / BLAS)
 tensor_t* matmul(tensor_t* a, tensor_t* b) {
 	
 	// A = m rows, n columns
@@ -284,35 +325,6 @@ tensor_t* matmul(tensor_t* a, tensor_t* b) {
 }
 
 
-// Unary OPs /*---------------------------------------------------------------------------*/
-
-typedef float (*unary_func_t)(float);
-
-void tensor_apply_unary(tensor_t* t, unary_func_t func) {
-	float* data = (float*)t->data;
-	
-
-	// pragma once simd 
-	for (int i = 0; i < t->total_size; i++) {
-		data[i] = func(data[i]);
-	}
-}
-
-
-void tensor_log2(tensor_t* t) { tensor_apply_unary(t, log2f); } 
-void tensor_exp2(tensor_t* t) { tensor_apply_unary(t, exp2f); } 
-void tensor_sin(tensor_t* t) { tensor_apply_unary(t, sinf); } 
-void tensor_sqrt(tensor_t* t) { tensor_apply_unary(t, sqrtf); }
-
-
-// cant apply unary_func_t here
-void tensor_neg(tensor_t* t) { 
-	float* data = (float*)t->data;
-	for (int i = 0; i < t->total_size; i++) {
-		data[i] = -data[i];
-	}
-}
-
 
 // if its contiguous return true, else false
 // check if strides are contiguous between dimensions
@@ -330,9 +342,6 @@ bool is_contiguous(tensor_t* t) {
 
 
 // main loop, testing -> will refactor to proper testing files
-
-#ifdef TENSORLIB_DEMO
-
 
 int
 main (int argc, char* argv[]) {
@@ -362,7 +371,7 @@ main (int argc, char* argv[]) {
 
 
 
-	//tensor_t* result = matmul(a,b);
+	tensor_t* result = matmul(a,b);
 	//tensor_fill(result);
 	
 
@@ -370,8 +379,8 @@ main (int argc, char* argv[]) {
 	//	tensor_sqrt(result);
 	//tensor_exp2(result);
 	//tensor_log2(result);
-	//tensor_sin(result);
-	//tensor_print(result);
+	tensor_sin(result);
+	tensor_print(result);
 	
   // printf("Created tensor at %p\n", (void*)result);
   // printf("Dimensions: %d\n", result->ndim);
@@ -401,7 +410,6 @@ main (int argc, char* argv[]) {
   return 0;
 }
 
-#endif // TENSORLIB_DEMO
 
 
 

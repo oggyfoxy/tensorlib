@@ -1,20 +1,23 @@
 ```
-minimalist tensor library in c that abstracts memory on embedded devices.
+minimalist tensor library in c that abstracts memory on ARM and x86.
 
-will focus on android devices (arm64), Pico 2W, ESP32-WROVER_E
+will focus on optimizing different hardware: android devices (arm64), Pico 2W, 
+and the ESP32-WROVER_E
 
-TODO:
+TODO
+current: modular tensor representation and primitive op abstractions
 - dynamic memory pool, will make it static if issues occuring. [V] 
 - tensor initialization [V]
-- tensor_get, tensor_set, tensor_print, tensor_fill (before ops) [V]
-- unary / binary ops [in progress)
-- movement ops
-- android support: arm neon intrinsics [X]
-- alignment, advanced ops, ... 
-- think about quantization
-
+- base interface: tensor_get, tensor_set, tensor_print, tensor_fill (pre-ops) [V]
+- primitive ops:  unary / binary ops [in progress]
+- movement ops [x]
+- AVX / NEON vectorization [x]
+- alignment, complex ops [x]
+- tiny mnist, other NN [x]
+- quantized dtypes [x] 
+- full sgemm kernel (c++17) [x]
 
 will set up a guide and testing suite once more advancements are made
 
-inspired by tinygrad and https://github.com/GandalfTea/tensorlib <3
+inspired by ggmml, tinygrad and https://github.com/GandalfTea/tensorlib <3
 ```
