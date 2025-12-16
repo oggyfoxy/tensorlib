@@ -33,7 +33,9 @@ tensor_t* tensor_create(int ndim, size_t* shape) {
 
 	// allocates an array of 1 object of total size and inits all bytes to zero
 	// we use uint8_t for byte-level precision
-	uint8_t* memory = (uint8_t*)calloc(1, size_struct + size_shape + size_stride + size_data);
+	uint8_t* memory = (uint8_t*)calloc(1, size_struct + size_shape + 
+                     size_stride + size_data);
+
 	if (!memory) return NULL;
 
 
@@ -73,15 +75,46 @@ void tensor_free(tensor_t* t) {
 
 void tensor_print(tensor_t* t) { 
   if (t == NULL || t->data == NULL) {
-    printf("Tensor: NULL\n");
+    printf("tensor: NULL\n");
     return;
   }
-  printf("Tensor(\n");
-  printf("\tdata: ");
-  for (int i = 0; i < t->total_size; i++)
-    printf("%f,", ((float*)t->data)[i]); // casts a float pointer to the actual data
-  printf("\n)\n");
+  printf("\ttensor(");
+  
+
+//  for (int i = 0; i < t->ndim; i++) {
+  printf("[");
+
+  //}
+  for (int i = 0; i < t->total_size; i++) {
+    // casts a float pointer to the actual data   
+    printf("%f", ((float*)t->data)[i]); 
+    int closed = 0;
+    for (int d = t->ndim-1; d >= 0; d--) {
+      if ((i+1) % t->stride[d] == 0) {
+        printf("]");
+        closed++;
+      } else { break; }
+
+    }
+
+    if (i < t->total_size - 1) {
+      printf(", ");
+
+      // for each opeing dims
+      for (int d = t->ndim - closed; d < t->ndim; d++) {
+        printf("[");
+      }
+
+      if (closed >= 2) {
+        printf("\n "); 
+      }
+    }
+  }
+ 
+  
+  printf("]\n)");
 }
+
 
 // fills tensor with data from 0 to max size
 void tensor_fill(tensor_t* t) {
@@ -93,7 +126,7 @@ void tensor_fill(tensor_t* t) {
 
 
 
-// Getters /*-----------------------------------------------------------------------------*/
+// Getters /*------------------------------------------------------------------*/
 
 float tensor_get1d(tensor_t* t, size_t i) {
   if (t->ndim != 1 || i >= t->shape[0]) 
@@ -123,7 +156,9 @@ float tensor_get3d(tensor_t* t, int i, int j, int k) {
 }
 
 float tensor_get4d(tensor_t* t, int i, int j, int k, int l) {
-  if (t->ndim != 4 || i >= t->shape[0] || j >= t->shape[1] || k >= t->shape[2] || l >= t->shape[3])
+  if (t->ndim != 4 || i >= t->shape[0] || j >= t->shape[1] 
+      || k >= t->shape[2] || l >= t->shape[3])
+
     return 0.0f;
 
   int idx = i * t->stride[0] + j * t->stride[1] + k * t->stride[2] + l;
@@ -138,7 +173,7 @@ float tensor_get(tensor_t* t, size_t);
 
 
 
-// Setters /*-----------------------------------------------------------------------------*/
+// Setters /*------------------------------------------------------------------*/
 bool tensor_set1d(tensor_t* t, int i, float value) {
   if (t->ndim != 1 || i >= t->shape[0]) 
     return false;
@@ -170,7 +205,9 @@ bool tensor_set3d(tensor_t* t, int i, int j, int k, float value) {
 
 
 bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value) {
-  if (t->ndim != 4 || i >= t->shape[0] || j >= t->shape[1] || k >= t->shape[2] || l >= t->shape[3])
+  if (t->ndim != 4 || i >= t->shape[0] || j >= t->shape[1]
+      || k >= t->shape[2] || l >= t->shape[3])
+
     return false;
 
   int idx = i * t->stride[0] + j * t->stride[1] + k * t->stride[2] + l;
@@ -182,7 +219,7 @@ bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value) {
 
 bool tensor_set(tensor_t* t, int ndim, float value);
 
-// Unary OPs /*---------------------------------------------------------------------------*/
+// Unary OPs /*----------------------------------------------------------------*/
 
 typedef float (*unary_func_t)(float);
 
@@ -210,7 +247,7 @@ void tensor_neg(tensor_t* t) {
 	}
 }
 
-// Binary OPs /*---------------------------------------------------------------------------*/
+// Binary OPs /*---------------------------------------------------------------*/
 
 tensor_t* tensor_add(tensor_t* a, tensor_t* b) {
 
@@ -348,8 +385,8 @@ main (int argc, char* argv[]) {
 	
 	// lets assume square matrices
   size_t shape[] = {2,2}; 
-  size_t shape1[] = {16,16};
-  size_t shape2[] = {16,16};
+  size_t shape1[] = {3,4};
+  size_t shape2[] = {3,4};
 
 	// tensor_t* result = tensor_create(2, shape);
 
@@ -379,13 +416,13 @@ main (int argc, char* argv[]) {
 	//	tensor_sqrt(result);
 	//tensor_exp2(result);
 	//tensor_log2(result);
-	tensor_sin(result);
+  //	tensor_sin(result);
 	tensor_print(result);
 	
-  // printf("Created tensor at %p\n", (void*)result);
-  // printf("Dimensions: %d\n", result->ndim);
+  printf("Created tensor at %p\n", (void*)result);
+  printf("Dimensions: %d\n", result->ndim);
   
-  //printf("Shape: [%zu, %zu]\n", result->shape[0], result->shape[1]);
+  printf("Shape: [%zu, %zu]\n", result->shape[0], result->shape[1]);
 
 
  	tensor_free(a);
@@ -412,4 +449,4 @@ main (int argc, char* argv[]) {
 
 
 
-
+// casts a float pointer to the actual data

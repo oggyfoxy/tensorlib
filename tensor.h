@@ -20,6 +20,8 @@
 typedef enum {
   INT8, // 
   FLOAT32,
+  BFLOAT16,
+  FLOAT16,
   // add more if necessary..
 } dtype_t;
 
@@ -54,7 +56,7 @@ void tensor_fill(tensor_t* t); // done
 // bool tensor_set(tensor_t*, size_t* indices);
 
 
-// Getters /*-----------------------------------------------------------------------------*/
+// Getters /*------------------------------------------------------------------*/
 
 //TODO change int to size_t for getters and setters
 
@@ -66,13 +68,13 @@ float tensor_get4d(tensor_t* t, int i, int j, int k, int l);
 
 bool is_contiguous(tensor_t* t);
 
-// Setters /*-----------------------------------------------------------------------------*/
+// Setters /*------------------------------------------------------------------*/
 bool tensor_set1d(tensor_t* t, int i, float value);
 bool tensor_set2d(tensor_t* t, int i, int j, float value);
 bool tensor_set3d(tensor_t* t, int i, int j, int k, float value);
 bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value);
 
-// Unary OPs /*----------------------------------------------------------------------------*/
+// Unary OPs /*----------------------------------------------------------------*/
 
 void tensor_exp2(tensor_t* t);
 void tensor_log2(tensor_t* t);
@@ -81,22 +83,24 @@ void tensor_sin(tensor_t* t);
 void tensor_neg(tensor_t* t);
 
 
-// Binary OPs /*---------------------------------------------------------------------------*/
+// Binary OPs /*---------------------------------------------------------------*/
 tensor_t* tensor_add(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_sub(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_div(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
 
+// TODO bitwise ops (AND, OR, XOR, left-shift, right-shift
+// (find correct abstraction first) 
 
 
-// Movement OPs /*-------------------------------------------------------------------------*/
+// Movement OPs /*-------------------------------------------------------------*/
 
 
 tensor_t* matmul(tensor_t* a, tensor_t* b); // naive implem works for ndim = 2.
 
 /* TODO
  * reduction primitive: sum, mean, min/max, 
- * shape / movement ops: reshape, permute (transpose), squeeze, slice 
+ * view / movement ops: reshape, permute (transpose), squeeze, slice 
  */ 
 
 
