@@ -10,6 +10,8 @@ current: modular tensor representation and primitive op abstractions
 - tensor initialization [V]
 - base interface: tensor_get, tensor_set, tensor_print, tensor_fill (pre-ops) [V]
 - primitive ops:  unary / binary ops [in progress]
+- lazy allocation
+- zero-copy
 - movement ops [x]
 - AVX / NEON vectorization [x]
 - alignment, complex ops [x]

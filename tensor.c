@@ -38,7 +38,6 @@ tensor_t* tensor_create(int ndim, size_t* shape) {
 
 	if (!memory) return NULL;
 
-
 	// distributing the memory
 	tensor_t* t = (tensor_t*)memory;
 
@@ -50,18 +49,16 @@ tensor_t* tensor_create(int ndim, size_t* shape) {
 
   t->ndim = ndim;
 	t->total_size = total_size;
+
 	// copy shape 
   for (int i = 0; i < ndim; i++)
     t->shape[i] = shape[i];
 
 
-		
 	// calculate strides with row-major order
   t->stride[ndim-1] = 1;
   for (int i = ndim-2; i >= 0; i--)
     t->stride[i] = t->stride[i+1] * shape[i+1];
-
-
 
   return t;
 } 
@@ -221,8 +218,7 @@ bool tensor_set(tensor_t* t, int ndim, float value);
 
 // Unary OPs /*----------------------------------------------------------------*/
 
-typedef float (*unary_func_t)(float);
-
+// can optimize later
 void tensor_apply_unary(tensor_t* t, unary_func_t func) {
 	float* data = (float*)t->data;
 	
@@ -249,79 +245,73 @@ void tensor_neg(tensor_t* t) {
 
 // Binary OPs /*---------------------------------------------------------------*/
 
-tensor_t* tensor_add(tensor_t* a, tensor_t* b) {
+void _op_add(float* a, float* b, float* out, int n) {
+	for (int i = 0; i < n; i++) out[i] = a[i] + b[i];
+}
+void _op_sub(float* a, float* b, float* out, int n) {
+	for (int i = 0; i < n; i++) out[i] = a[i] - b[i];
+}
+void _op_dot(float* a, float* b, float* out, int n) {
+	for (int i = 0; i < n; i++) out[i] = a[i] * b[i];
+}
+void _op_idiv(float* a, float* b, float* out, int n) {
+	for (int i = 0; i < n; i++) out[i] = a[i] / b[i];
+}
 
+
+// sanity checks
+
+/*
+
+void check_binaryop_data(tensor_t* lhs, tensor_t* rhs) {
+  if (lhs->ndim != rhs->ndim) 
+    printf("Tensors should have the same dimensions for add()");
+  for (size_t i = 0; i < lhs->ndim; i++) {
+    if (lhs->shape != rhs->shape)
+      printf("Tensors should have the same shapes for add()");
+  }
+}
+*/
+
+
+tensor_t* tensor_apply_binary(tensor_t* a, tensor_t* b, binary_op_t op) {
+	
+	// check shapes 
 	if (a->ndim != b->ndim) return NULL;
 	for (int i = 0; i < a->ndim; i++) {
 		if (a->shape[i] != b->shape[i]) return NULL;
 	}
+	
+	// create result 
+	tensor_t* t = tensor_create(a->ndim, a->shape);  
+	if (!t) return NULL;  
+    
+	// call kernel 
+	
+	
+	op((float*)a->data, (float*)b->data, (float*)t->data, t->total_size); 
+	
+	return t;	
+  
+}
 
-	tensor_t* t = tensor_create(a->ndim, a->shape);
 
-	float* a_data = (float*)a->data;
-	float* b_data = (float*)b->data;
-	float* t_data = (float*)t->data;
-	for (int i = 0; i < a->total_size; i++ ) {
-		t_data[i] = a_data[i] + b_data[i];
-	}
-	return t; 
+tensor_t* tensor_add(tensor_t* a, tensor_t* b) {
+	return tensor_apply_binary(a, b, _op_add);
 }
 
 tensor_t* tensor_sub(tensor_t* a, tensor_t* b) {
-
-	if (a->ndim != b->ndim) return NULL;
-	for (int i = 0; i < a->ndim; i++) {
-		if (a->shape[i] != b->shape[i]) return NULL;
-	}
-
-	tensor_t* t = tensor_create(a->ndim, a->shape);
-
-	float* a_data = (float*)a->data;
-	float* b_data = (float*)b->data;
-	float* t_data = (float*)t->data;
-	for (int i = 0; i < a->total_size; i++ ) {
-		t_data[i] = a_data[i] -  b_data[i];
-	}
-	return t;
+	return tensor_apply_binary(a, b, _op_sub);
 }
 
-tensor_t* tensor_div(tensor_t* a, tensor_t* b) {
-
-	if (a->ndim != b->ndim) return NULL;
-	for (int i = 0; i < a->ndim; i++) {
-		if (a->shape[i] != b->shape[i]) return NULL;
-	}
-
-	tensor_t* t = tensor_create(a->ndim, a->shape);
-
-	float* a_data = (float*)a->data;
-	float* b_data = (float*)b->data;
-	float* t_data = (float*)t->data;
-	for (int i = 0; i < a->total_size; i++ ) {
-		t_data[i] = a_data[i] /  b_data[i];
-	}
-	return t;
+tensor_t* tensor_dot(tensor_t* a, tensor_t* b) {
+	return tensor_apply_binary(a, b, _op_dot);
 }
 
-tensor_t* tensor_mul(tensor_t* a, tensor_t* b) {
-
-	if (a->ndim != b->ndim) return NULL;
-	for (int i = 0; i < a->ndim; i++) {
-		if (a->shape[i] != b->shape[i]) return NULL;
-	}
-
-	tensor_t* t = tensor_create(a->ndim, a->shape);
-
-	float* a_data = (float*)a->data;
-	float* b_data = (float*)b->data;
-	float* t_data = (float*)t->data;
-	for (int i = 0; i < a->total_size; i++ ) {
-		t_data[i] = a_data[i] *  b_data[i];
-	}
-
-	return t;
-
+tensor_t* tensor_idiv(tensor_t* a, tensor_t* b) {
+	return tensor_apply_binary(a, b, _op_idiv);
 }
+
 
 
 
@@ -408,7 +398,7 @@ main (int argc, char* argv[]) {
 
 
 
-	tensor_t* result = matmul(a,b);
+	tensor_t* result = tensor_add(a,b);
 	//tensor_fill(result);
 	
 
@@ -449,4 +439,3 @@ main (int argc, char* argv[]) {
 
 
 
-// casts a float pointer to the actual data

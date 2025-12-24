@@ -44,6 +44,12 @@ typedef struct {
 } tensor_t;
 
 
+// unary and binary abstractions
+typedef float (*unary_func_t)(float);
+
+typedef void (*binary_op_t)(float* a, float* b, float* out, int size);
+
+
 // tensor interface
 tensor_t* tensor_create(int ndim, size_t* shape); // done
 void tensor_free(tensor_t* t); // done
@@ -76,6 +82,8 @@ bool tensor_set4d(tensor_t* t, int i, int j, int k, int l, float value);
 
 // Unary OPs /*----------------------------------------------------------------*/
 
+void tensor_apply_unary(tensor_t* t, unary_func_t func);
+
 void tensor_exp2(tensor_t* t);
 void tensor_log2(tensor_t* t);
 void tensor_sqrt(tensor_t* t);
@@ -84,10 +92,12 @@ void tensor_neg(tensor_t* t);
 
 
 // Binary OPs /*---------------------------------------------------------------*/
+tensor_t* tensor_apply_binary(tensor_t* a, tensor_t* b, binary_op_t op);
+
 tensor_t* tensor_add(tensor_t* a, tensor_t* b); // returns a new tensor 
 tensor_t* tensor_sub(tensor_t* a, tensor_t* b); // returns a new tensor 
-tensor_t* tensor_div(tensor_t* a, tensor_t* b); // returns a new tensor 
-tensor_t* tensor_mul(tensor_t* a, tensor_t* b); // returns a new tensor
+tensor_t* tensor_idiv(tensor_t* a, tensor_t* b); // returns a new tensor 
+tensor_t* tensor_dot(tensor_t* a, tensor_t* b); // returns a new tensor
 
 // TODO bitwise ops (AND, OR, XOR, left-shift, right-shift
 // (find correct abstraction first) 
