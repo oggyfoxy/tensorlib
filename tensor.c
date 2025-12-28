@@ -5,7 +5,17 @@
 #include <stdbool.h> 
 #include <math.h>
 #include <stdint.h>
-//#include <arm_neon.h> // optimizations 
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+  #include <immintrin.h> // AVX2 (256 bits)
+  #define SIMD_AVX
+#elif defined(__aarch64__) || defined(__arm64__) || defined(_M_ARM64)
+  #include <arm_neon.h>
+  #define SIMD_NEON
+#else 
+  #define SIMD_NONE
+#endif 
+
 
 
 #include "tensor.h"
@@ -14,46 +24,37 @@
 // arm neon https://developer.arm.com/architectures/instruction-sets/intrinsics/
 
 
-
 // allocates a tensor struct in memory (v2)
-// TODO v3 add alignment 
+// TODO v3 add alignment, add lazy memory alloc (only on creation) 
 tensor_t* tensor_create(int ndim, size_t* shape) {
   
-  // size
-  int total_size = 1;
-  for (int i = 0; i < ndim; i++) {
-    total_size *= shape[i];
-  }
-
-	// calculate nbr of bytes for each part we allocate
+ 	// calculate nbr of bytes for each part we allocate
 	size_t size_struct = sizeof(tensor_t);
 	size_t size_shape = ndim * sizeof(size_t);
 	size_t size_stride = ndim * sizeof(int);
-	size_t size_data = total_size * sizeof(float);
+	// size_t size_data = total_size * sizeof(float);
 
 	// allocates an array of 1 object of total size and inits all bytes to zero
 	// we use uint8_t for byte-level precision
 	uint8_t* memory = (uint8_t*)calloc(1, size_struct + size_shape + 
-                     size_stride + size_data);
+                     size_stride);
 
 	if (!memory) return NULL;
 
 	// distributing the memory
 	tensor_t* t = (tensor_t*)memory;
-
-
 	t->shape = (size_t*)(memory + size_struct); 
 	t->stride = (int*)(memory + size_struct + size_shape);
-	t->data = (float*)(memory + size_struct + size_shape + size_stride);
-
-
   t->ndim = ndim;
+  t->realized = false;
+
+  // size
+  int total_size = 1;
+  for (int i = 0; i < ndim; i++) {
+    total_size *= shape[i];
+    t->shape[i] = shape[i]; // copy shape 
+  }
 	t->total_size = total_size;
-
-	// copy shape 
-  for (int i = 0; i < ndim; i++)
-    t->shape[i] = shape[i];
-
 
 	// calculate strides with row-major order
   t->stride[ndim-1] = 1;
@@ -63,6 +64,12 @@ tensor_t* tensor_create(int ndim, size_t* shape) {
   return t;
 } 
 
+
+void tensor_realize(tensor_t* t) {
+  if (t->realized) return;
+  t->data = malloc(t->total_size * sizeof(float));
+  t->realized = true;
+}
 
 // frees this tensor
 void tensor_free(tensor_t* t) {
@@ -229,19 +236,26 @@ void tensor_apply_unary(tensor_t* t, unary_func_t func) {
 }
 
 
-void tensor_log2(tensor_t* t) { tensor_apply_unary(t, log2f); } 
-void tensor_exp2(tensor_t* t) { tensor_apply_unary(t, exp2f); } 
-void tensor_sin(tensor_t* t) { tensor_apply_unary(t, sinf); } 
-void tensor_sqrt(tensor_t* t) { tensor_apply_unary(t, sqrtf); }
+void tensor_log2_scalar(tensor_t* t) { tensor_apply_unary(t, log2f); } 
+void tensor_exp2_scalar(tensor_t* t) { tensor_apply_unary(t, exp2f); } 
+void tensor_sin_scalar(tensor_t* t) { tensor_apply_unary(t, sinf); } 
+void tensor_sqrt_scalar(tensor_t* t) { tensor_apply_unary(t, sqrtf); }
 
 
 // cant apply unary_func_t here
-void tensor_neg(tensor_t* t) { 
+void tensor_neg_scalar(tensor_t* t) { 
 	float* data = (float*)t->data;
   for (int i = 0; i < t->total_size; i++) {
 		data[i] = -data[i];
 	}
 }
+
+#ifdef SIMD_AVX_
+  static void tensor_log2_avx2(tensor_t* t);
+#endif
+
+
+
 
 // Binary OPs /*---------------------------------------------------------------*/
 
@@ -273,7 +287,6 @@ void check_binaryop_data(tensor_t* lhs, tensor_t* rhs) {
 }
 */
 
-
 tensor_t* tensor_apply_binary(tensor_t* a, tensor_t* b, binary_op_t op) {
 	
 	// check shapes 
@@ -285,10 +298,9 @@ tensor_t* tensor_apply_binary(tensor_t* a, tensor_t* b, binary_op_t op) {
 	// create result 
 	tensor_t* t = tensor_create(a->ndim, a->shape);  
 	if (!t) return NULL;  
+  tensor_realize(t);
     
 	// call kernel 
-	
-	
 	op((float*)a->data, (float*)b->data, (float*)t->data, t->total_size); 
 	
 	return t;	
@@ -382,17 +394,21 @@ main (int argc, char* argv[]) {
 
   tensor_t* a = tensor_create(2, shape1);
   tensor_t* b = tensor_create(2, shape2);
-
+  tensor_realize(a);
 	tensor_fill(a);
-	// tensor_print(a);
+	// tensor_print(a)
+
+  tensor_realize(b);
 	tensor_fill(b);
 	
 
 	// tensor_print(b);
 
 	tensor_t* t = tensor_create(2,shape);
+  tensor_realize(t);
 	tensor_fill(t);
 	printf("struct: %p\n", (void*)t);
+
 	printf("data:   %p\n", t->data);
 	printf("diff:   %ld bytes\n", (uint8_t*)t->data - (uint8_t*)t);
 
