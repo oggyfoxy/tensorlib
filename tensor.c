@@ -5,6 +5,7 @@
 #include <stdbool.h> 
 #include <math.h>
 #include <stdint.h>
+#include <sys/mman.h>
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
   #include <immintrin.h> // AVX2 (256 bits)
@@ -67,7 +68,11 @@ tensor_t* tensor_create(int ndim, size_t* shape) {
 
 void tensor_realize(tensor_t* t) {
   if (t->realized) return;
-  t->data = malloc(t->total_size * sizeof(float));
+  t->data = mmap(NULL,
+                  t->total_size * sizeof(float),
+                  PROT_READ | PROT_WRITE,
+                  MAP_PRIVATE | MAP_ANONYMOUS,
+                  -1, 0);
   t->realized = true;
 }
 
@@ -340,7 +345,9 @@ tensor_t* matmul(tensor_t* a, tensor_t* b) {
 
 	size_t c_shape[2] = { (size_t)m, (size_t)p };
 	tensor_t* c = tensor_create(2, c_shape);
-	
+  
+  tensor_realize(c);
+
 	float* a_data = (float*)a->data;
 	float* b_data = (float*)b->data;
 	float* c_data = (float*)c->data;
@@ -387,8 +394,8 @@ main (int argc, char* argv[]) {
 	
 	// lets assume square matrices
   size_t shape[] = {2,2}; 
-  size_t shape1[] = {3,4};
-  size_t shape2[] = {3,4};
+  size_t shape1[] = {128,128};
+  size_t shape2[] = {128,64};
 
 	// tensor_t* result = tensor_create(2, shape);
 
@@ -414,7 +421,7 @@ main (int argc, char* argv[]) {
 
 
 
-	tensor_t* result = tensor_add(a,b);
+	tensor_t* result = matmul(a,b);
 	//tensor_fill(result);
 	
 
@@ -423,7 +430,7 @@ main (int argc, char* argv[]) {
 	//tensor_exp2(result);
 	//tensor_log2(result);
   //	tensor_sin(result);
-	tensor_print(result);
+	 tensor_print(result);
 	
   printf("Created tensor at %p\n", (void*)result);
   printf("Dimensions: %d\n", result->ndim);
